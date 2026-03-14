@@ -491,6 +491,46 @@ function MiniGauge(props) {
   );
 }
 
+/* ===== EXCEL DOWNLOAD FOR DOCS ===== */
+
+function downloadDocsExcel(cn) {
+  var header = ["No","영역","문항코드","질문","제출서류1","제출서류2","제출서류3","참고규정","제출여부","비고"];
+  var rows = QS.map(function(q) {
+    var docs = q.d || [];
+    return [
+      q.no,
+      AC[q.a].n + "(" + q.a + ")",
+      q.cd,
+      q.q,
+      docs[0] || "",
+      docs[1] || "",
+      docs[2] || "",
+      q.r || "",
+      "",
+      ""
+    ];
+  });
+
+  var csv = "\uFEFF";
+  csv += header.join(",") + "\n";
+  rows.forEach(function(row) {
+    csv += row.map(function(cell) {
+      var s = String(cell).replace(/"/g, '""');
+      return '"' + s + '"';
+    }).join(",") + "\n";
+  });
+
+  var blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = (cn || "ESG") + "_증빙자료_체크리스트.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /* ===== QUESTION CARD ===== */
 
 function QuestionCard(props) {
@@ -1098,7 +1138,10 @@ export default function ESGApp() {
         <div style={{maxWidth:660, margin:"0 auto"}}>
           <div style={{display:"flex", justifyContent:"space-between", marginBottom:4, fontSize:11}}>
             <span style={{color:"#64748b"}}>진단 진행률</span>
-            <span><span style={{color:"#22c55e", fontWeight:700}}>{ac}</span><span style={{color:"#475569"}}>{" / 30 (" + pr.toFixed(0) + "%)"}</span></span>
+            <div style={{display:"flex", alignItems:"center", gap:8}}>
+              <button onClick={function(){downloadDocsExcel(cn)}} style={{padding:"2px 8px", borderRadius:5, border:"1px solid rgba(34,197,94,0.3)", background:"rgba(34,197,94,0.08)", color:"#86efac", fontSize:9, cursor:"pointer", fontWeight:600}}>증빙자료 엑셀</button>
+              <span><span style={{color:"#22c55e", fontWeight:700}}>{ac}</span><span style={{color:"#475569"}}>{" / 30 (" + pr.toFixed(0) + "%)"}</span></span>
+            </div>
           </div>
           <div style={{height:5, background:"#1e293b", borderRadius:3, marginBottom:16, overflow:"hidden"}}>
             <div style={{height:"100%", width:pr+"%", background:"linear-gradient(90deg,#22c55e,#3b82f6,#a855f7)", transition:"width 0.4s"}} />
